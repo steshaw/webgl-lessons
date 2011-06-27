@@ -1,29 +1,35 @@
 <html>
 
 <head>
-<title>Learning WebGL &mdash; lesson 1</title>
+<title>Learning WebGL &mdash; lesson 2</title>
 <meta http-equiv="content-type" content="text/html; charset=ISO-8859-1">
 
 <script type="text/javascript" src="../lib/glMatrix-0.9.5.min.js"></script>
+
+<script id="shader-vs" type="x-shader/x-vertex">
+  attribute vec3 aVertexPos;
+  attribute vec4 aVertexColour;
+
+  uniform mat4 uModelView;
+  uniform mat4 uProjection;
+
+  varying vec4 vColour;
+
+  void main(void) {
+    gl_Position = uProjection * uModelView * vec4(aVertexPos, 1.0);
+    vColour = vec4(1.0, 0.0, 0.0, 1.0);
+  }
+</script>
 
 <script id="shader-fs" type="x-shader/x-fragment">
   #ifdef GL_ES
   precision highp float;
   #endif
 
-  void main(void) {
-    gl_FragColor = vec4(1.0, 1.0, 1.0, 1.0);
-  }
-</script>
-
-<script id="shader-vs" type="x-shader/x-vertex">
-  attribute vec3 aVertexPos;
-
-  uniform mat4 uModelView;
-  uniform mat4 uProjection;
+  varying vec4 vColour;
 
   void main(void) {
-    gl_Position = uProjection * uModelView * vec4(aVertexPos, 1.0);
+    gl_FragColor = vColour;
   }
 </script>
 
