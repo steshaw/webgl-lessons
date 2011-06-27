@@ -131,17 +131,13 @@
   var modelView = mat4.create();
   var modelViewStack = [];
 
-  function modelViewPush() {
+  function withModelView(action) {
     var copy = mat4.create();
     mat4.set(modelView, copy);
-    modelViewStack.push(copy);
-  }
 
-  function modelViewPop() {
-    if (modelViewStack.length == 0) {
-      throw "Invalid mvPopMatrix!";
-    }
-    modelView = modelViewStack.pop();
+    action();
+
+    modelView = copy;
   }
 
   function setMatrixUniforms() {
@@ -217,32 +213,33 @@
     }
 
     mat4.identity(modelView);
+    mat4.translate(modelView, [0.0, 0.0, -7.0]);
 
-    mat4.translate(modelView, [-1.5, 0.0, -7.0]);
-    modelViewPush();
-    {
-      mat4.rotate(modelView, degToRad(triangleRotation), [0, 1, 0]);
-      gl.bindBuffer(gl.ARRAY_BUFFER, triangle.vertices);
-      gl.vertexAttribPointer(shaderProgram.aVertexPosition, triangle.vertices.itemSize, gl.FLOAT, false, 0, 0);
-      gl.bindBuffer(gl.ARRAY_BUFFER, triangle.colours);
-      gl.vertexAttribPointer(shaderProgram.aVertexColour, triangle.colours.itemSize, gl.FLOAT, false, 0, 0);
-      setMatrixUniforms();
-      gl.drawArrays(gl.TRIANGLES, 0, triangle.vertices.numItems);
-    }
-    modelViewPop();
+    withModelView(function() {
+      mat4.translate(modelView, [-1.5, 0.0, 0.0]);
+      withModelView(function() {
+        mat4.rotate(modelView, degToRad(triangleRotation), [0, 1, 0]);
+        gl.bindBuffer(gl.ARRAY_BUFFER, triangle.vertices);
+        gl.vertexAttribPointer(shaderProgram.aVertexPosition, triangle.vertices.itemSize, gl.FLOAT, false, 0, 0);
+        gl.bindBuffer(gl.ARRAY_BUFFER, triangle.colours);
+        gl.vertexAttribPointer(shaderProgram.aVertexColour, triangle.colours.itemSize, gl.FLOAT, false, 0, 0);
+        setMatrixUniforms();
+        gl.drawArrays(gl.TRIANGLES, 0, triangle.vertices.numItems);
+      });
+    });
 
-    mat4.translate(modelView, [3.0, 0.0, 0.0]);
-    modelViewPush();
-    {
-      mat4.rotate(modelView, degToRad(squareRotation), [1, 0, 0]);
-      gl.bindBuffer(gl.ARRAY_BUFFER, square.vertices);
-      gl.vertexAttribPointer(shaderProgram.aVertexPosition, square.vertices.itemSize, gl.FLOAT, false, 0, 0);
-      gl.bindBuffer(gl.ARRAY_BUFFER, square.colours);
-      gl.vertexAttribPointer(shaderProgram.aVertexColour, square.colours.itemSize, gl.FLOAT, false, 0, 0);
-      setMatrixUniforms();
-      gl.drawArrays(gl.TRIANGLE_STRIP, 0, square.vertices.numItems);
-    }
-    modelViewPop();
+    withModelView(function() {
+      mat4.translate(modelView, [+1.5, 0.0, 0.0]);
+      withModelView(function() {
+        mat4.rotate(modelView, degToRad(squareRotation), [1, 0, 0]);
+        gl.bindBuffer(gl.ARRAY_BUFFER, square.vertices);
+        gl.vertexAttribPointer(shaderProgram.aVertexPosition, square.vertices.itemSize, gl.FLOAT, false, 0, 0);
+        gl.bindBuffer(gl.ARRAY_BUFFER, square.colours);
+        gl.vertexAttribPointer(shaderProgram.aVertexColour, square.colours.itemSize, gl.FLOAT, false, 0, 0);
+        setMatrixUniforms();
+        gl.drawArrays(gl.TRIANGLE_STRIP, 0, square.vertices.numItems);
+      });
+    });
   }
 
   var lastTime = 0;
