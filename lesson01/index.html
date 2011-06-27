@@ -17,13 +17,13 @@
 </script>
 
 <script id="shader-vs" type="x-shader/x-vertex">
-  attribute vec3 aVertexPosition;
+  attribute vec3 aVertex;
 
-  uniform mat4 uMVMatrix;
-  uniform mat4 uPMatrix;
+  uniform mat4 uModelView;
+  uniform mat4 uProjection;
 
   void main(void) {
-    gl_Position = uPMatrix * uMVMatrix * vec4(aVertexPosition, 1.0);
+    gl_Position = uProjection * uModelView * vec4(aVertex, 1.0);
   }
 </script>
 
@@ -105,38 +105,38 @@
 
     gl.useProgram(shaderProgram);
 
-    shaderProgram.vertexPositionAttribute = gl.getAttribLocation(shaderProgram, "aVertexPosition");
-    gl.enableVertexAttribArray(shaderProgram.vertexPositionAttribute);
+    shaderProgram.aVertex = gl.getAttribLocation(shaderProgram, "aVertex");
+    gl.enableVertexAttribArray(shaderProgram.aVertex);
 
-    shaderProgram.pMatrixUniform = gl.getUniformLocation(shaderProgram, "uPMatrix");
-    shaderProgram.mvMatrixUniform = gl.getUniformLocation(shaderProgram, "uMVMatrix");
+    shaderProgram.uProjection = gl.getUniformLocation(shaderProgram, "uProjection");
+    shaderProgram.uModelView = gl.getUniformLocation(shaderProgram, "uModelView");
   }
 
-  var mvMatrix = mat4.create();
-  var pMatrix = mat4.create();
+  var modelView = mat4.create();
+  var projection = mat4.create();
 
   function setMatrixUniforms() {
-    gl.uniformMatrix4fv(shaderProgram.pMatrixUniform, false, pMatrix);
-    gl.uniformMatrix4fv(shaderProgram.mvMatrixUniform, false, mvMatrix);
+    gl.uniformMatrix4fv(shaderProgram.uProjection, false, projection);
+    gl.uniformMatrix4fv(shaderProgram.uModelView, false, modelView);
   }
 
-  var triangleVertexPositionBuffer;
-  var squareVertexPositionBuffer;
+  var triangleBuffer;
+  var squareBuffer;
 
   function initBuffers() {
-    triangleVertexPositionBuffer = gl.createBuffer();
-    gl.bindBuffer(gl.ARRAY_BUFFER, triangleVertexPositionBuffer);
+    triangleBuffer = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, triangleBuffer);
     var vertices = [
        0.0,  1.0,  0.0,
       -1.0, -1.0,  0.0,
        1.0, -1.0,  0.0
     ];
     gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices), gl.STATIC_DRAW);
-    triangleVertexPositionBuffer.itemSize = 3;
-    triangleVertexPositionBuffer.numItems = 3;
+    triangleBuffer.itemSize = 3;
+    triangleBuffer.numItems = 3;
 
-    squareVertexPositionBuffer = gl.createBuffer();
-    gl.bindBuffer(gl.ARRAY_BUFFER, squareVertexPositionBuffer);
+    squareBuffer = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, squareBuffer);
     vertices = [
        1.0,  1.0,  0.0,
       -1.0,  1.0,  0.0,
@@ -144,8 +144,8 @@
       -1.0, -1.0,  0.0
     ];
     gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices), gl.STATIC_DRAW);
-    squareVertexPositionBuffer.itemSize = 3;
-    squareVertexPositionBuffer.numItems = 4;
+    squareBuffer.itemSize = 3;
+    squareBuffer.numItems = 4;
   }
 
   function drawScene() {
@@ -155,27 +155,27 @@
     var usePerspective = true;
 
     if (usePerspective) {
-      mat4.perspective(45, gl.viewportWidth / gl.viewportHeight, 0.1, 100.0, pMatrix);
+      mat4.perspective(45, gl.viewportWidth / gl.viewportHeight, 0.1, 100.0, projection);
     } else {
-//    mat4.perspective(45, gl.viewportWidth / gl.viewportHeight, 0.00001, 100.0, pMatrix);
-//    mat4.ortho(-4.0, 4.0, -4.0, 4.0, 0, 1000, pMatrix);
-//    mat4.identity(pMatrix);
-      mat4.ortho(-10.0, +10.0, -10.0, +10.0, 0.1, 100.0, pMatrix);
+//    mat4.perspective(45, gl.viewportWidth / gl.viewportHeight, 0.00001, 100.0, projection);
+//    mat4.ortho(-4.0, 4.0, -4.0, 4.0, 0, 1000, projection);
+//    mat4.identity(projection);
+      mat4.ortho(-10.0, +10.0, -10.0, +10.0, 0.1, 100.0, projection);
     }
 
-    mat4.identity(mvMatrix);
+    mat4.identity(modelView);
 
-    mat4.translate(mvMatrix, [-1.5, 0.0, -7.0]);
-    gl.bindBuffer(gl.ARRAY_BUFFER, triangleVertexPositionBuffer);
-    gl.vertexAttribPointer(shaderProgram.vertexPositionAttribute, triangleVertexPositionBuffer.itemSize, gl.FLOAT, false, 0, 0);
+    mat4.translate(modelView, [-1.5, 0.0, -7.0]);
+    gl.bindBuffer(gl.ARRAY_BUFFER, triangleBuffer);
+    gl.vertexAttribPointer(shaderProgram.aVertex, triangleBuffer.itemSize, gl.FLOAT, false, 0, 0);
     setMatrixUniforms();
-    gl.drawArrays(gl.TRIANGLES, 0, triangleVertexPositionBuffer.numItems);
+    gl.drawArrays(gl.TRIANGLES, 0, triangleBuffer.numItems);
 
-    mat4.translate(mvMatrix, [3.0, 0.0, 0.0]);
-    gl.bindBuffer(gl.ARRAY_BUFFER, squareVertexPositionBuffer);
-    gl.vertexAttribPointer(shaderProgram.vertexPositionAttribute, squareVertexPositionBuffer.itemSize, gl.FLOAT, false, 0, 0);
+    mat4.translate(modelView, [3.0, 0.0, 0.0]);
+    gl.bindBuffer(gl.ARRAY_BUFFER, squareBuffer);
+    gl.vertexAttribPointer(shaderProgram.aVertex, squareBuffer.itemSize, gl.FLOAT, false, 0, 0);
     setMatrixUniforms();
-    gl.drawArrays(gl.TRIANGLE_STRIP, 0, squareVertexPositionBuffer.numItems);
+    gl.drawArrays(gl.TRIANGLE_STRIP, 0, squareBuffer.numItems);
   }
 
   function webGLStart() {
@@ -199,7 +199,7 @@
 
   <canvas id="lesson01-canvas" style="border: none;" width="500" height="500"></canvas>
 
-  <br/>
+  <br />
   <a href="http://learningwebgl.com/blog/?p=28">&lt;&lt; Back to Lesson 1</a><br />
 </body>
 
