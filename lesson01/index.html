@@ -17,13 +17,13 @@
 </script>
 
 <script id="shader-vs" type="x-shader/x-vertex">
-  attribute vec3 aVertex;
+  attribute vec3 aVertexPos;
 
   uniform mat4 uModelView;
   uniform mat4 uProjection;
 
   void main(void) {
-    gl_Position = uProjection * uModelView * vec4(aVertex, 1.0);
+    gl_Position = uProjection * uModelView * vec4(aVertexPos, 1.0);
   }
 </script>
 
@@ -105,8 +105,8 @@
 
     gl.useProgram(shaderProgram);
 
-    shaderProgram.aVertex = gl.getAttribLocation(shaderProgram, "aVertex");
-    gl.enableVertexAttribArray(shaderProgram.aVertex);
+    shaderProgram.aVertexPos = gl.getAttribLocation(shaderProgram, "aVertexPos");
+    gl.enableVertexAttribArray(shaderProgram.aVertexPos);
 
     shaderProgram.uProjection = gl.getUniformLocation(shaderProgram, "uProjection");
     shaderProgram.uModelView = gl.getUniformLocation(shaderProgram, "uModelView");
@@ -167,13 +167,13 @@
 
     mat4.translate(modelView, [-1.5, 0.0, -7.0]);
     gl.bindBuffer(gl.ARRAY_BUFFER, triangleBuffer);
-    gl.vertexAttribPointer(shaderProgram.aVertex, triangleBuffer.itemSize, gl.FLOAT, false, 0, 0);
+    gl.vertexAttribPointer(shaderProgram.aVertexPos, triangleBuffer.itemSize, gl.FLOAT, false, 0, 0);
     setMatrixUniforms();
     gl.drawArrays(gl.TRIANGLES, 0, triangleBuffer.numItems);
 
     mat4.translate(modelView, [3.0, 0.0, 0.0]);
     gl.bindBuffer(gl.ARRAY_BUFFER, squareBuffer);
-    gl.vertexAttribPointer(shaderProgram.aVertex, squareBuffer.itemSize, gl.FLOAT, false, 0, 0);
+    gl.vertexAttribPointer(shaderProgram.aVertexPos, squareBuffer.itemSize, gl.FLOAT, false, 0, 0);
     setMatrixUniforms();
     gl.drawArrays(gl.TRIANGLE_STRIP, 0, squareBuffer.numItems);
   }
