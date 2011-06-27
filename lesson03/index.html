@@ -128,8 +128,12 @@
   }
 
   var projection = mat4.create();
+
+  //
+  // withModelView is easier than immediate-mode OpenGL, however, it no longer looks as if modelView needs
+  // to be a global variable.
+  //
   var modelView = mat4.create();
-  var modelViewStack = [];
 
   function withModelView(action) {
     var copy = mat4.create();
@@ -242,6 +246,11 @@
     });
   }
 
+  //
+  // Appears to have a visually undetectable problem of showing the same frame (i.e. degree of rotation/animation)
+  // for the first _and_ second frames.
+  // Should be able to do something here with (lazy) streams of rotation/tweening values (is that FRP?).
+  //
   var lastTime = 0;
   function animate() {
     var timeNow = new Date().getTime();
