@@ -124,7 +124,6 @@
     return shaderProgram;
   }
 
-
   function initBuffers(gl) {
     var triangle = {};
     var square = {};
@@ -180,12 +179,9 @@
     return buffers;
   }
 
-  var frame = 0;
-
   function drawScene(gl, shaderProgram, buffers, animationTime, animationState) {
-    ++frame;
-    if (frame < 10) {
-      console.log("frame=" + frame + " animationTime=" + animationTime + 
+    if (animationState.frame < 10) {
+      console.log("frame=" + animationState.frame + " animationTime=" + animationTime + 
                   " triangleRotation=" + animationState.triangleRotation);
     }
 
@@ -252,10 +248,10 @@
     });
   }
 
-  function animatePure(prevTime, now, animationState) {
+  function animate(prevTime, now, animationState) {
       var elapsed = now - prevTime;
-
       return {
+        frame: animationState.frame + 1,
         triangleRotation: animationState.triangleRotation + (90 * elapsed) / 1000.0,
         squareRotation: animationState.squareRotation + (75 * elapsed) / 1000.0
       };
@@ -274,23 +270,20 @@
     var prevTime = new Date().getTime();
 
     var animationState = {
+      frame: 1,
       triangleRotation: 0.0,
       squareRotation: 0.0
     };
 
-    //
-    // Should be able to do something here with (lazy) streams of rotation/tweening values (is that FRP?).
-    // animate as a pure function?
-    //
-    function animate() {
+    function doAnimate() {
       var now = new Date().getTime();
-      animationState = animatePure(prevTime, now, animationState);
+      animationState = animate(prevTime, now, animationState);
       prevTime = now;
     }
 
     function tick(animationTime) {
       drawScene(gl, shaderProgram, buffers, animationTime, animationState);
-      animate();
+      doAnimate();
       requestAnimationFrame(tick);
     }
 
