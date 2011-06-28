@@ -173,15 +173,13 @@
     square.colours.numItems = 4;
   }
 
-  var triangleRotation = 0;
-  var squareRotation = 0;
-
   var frame = 0;
 
-  function drawScene(animationTime, gl) {
+  function drawScene(animationTime, animationState, gl) {
     ++frame;
     if (frame < 10) {
-      console.log("frame=" + frame + " animationTime=" + animationTime + " triangleRotation=" + triangleRotation);
+      console.log("frame=" + frame + " animationTime=" + animationTime + 
+                  " triangleRotation=" + animationState.triangleRotation);
     }
 
     gl.viewport(0, 0, gl.viewportWidth, gl.viewportHeight);
@@ -221,7 +219,7 @@
     withModelView(function() {
       mat4.translate(modelView, [-1.5, 0.0, 0.0]);
       withModelView(function() {
-        mat4.rotate(modelView, degToRad(triangleRotation), [0, 1, 0]);
+        mat4.rotate(modelView, degToRad(animationState.triangleRotation), [0, 1, 0]);
         gl.bindBuffer(gl.ARRAY_BUFFER, triangle.vertices);
         gl.vertexAttribPointer(shaderProgram.aVertexPosition, triangle.vertices.itemSize, gl.FLOAT, false, 0, 0);
         gl.bindBuffer(gl.ARRAY_BUFFER, triangle.colours);
@@ -234,7 +232,7 @@
     withModelView(function() {
       mat4.translate(modelView, [+1.5, 0.0, 0.0]);
       withModelView(function() {
-        mat4.rotate(modelView, degToRad(squareRotation), [1, 0, 0]);
+        mat4.rotate(modelView, degToRad(animationState.squareRotation), [1, 0, 0]);
         gl.bindBuffer(gl.ARRAY_BUFFER, square.vertices);
         gl.vertexAttribPointer(shaderProgram.aVertexPosition, square.vertices.itemSize, gl.FLOAT, false, 0, 0);
         gl.bindBuffer(gl.ARRAY_BUFFER, square.colours);
@@ -243,6 +241,15 @@
         gl.drawArrays(gl.TRIANGLE_STRIP, 0, square.vertices.numItems);
       });
     });
+  }
+
+  function animatePure(prevTime, now, animationState) {
+      var elapsed = now - prevTime;
+
+      return {
+        triangleRotation: animationState.triangleRotation + (90 * elapsed) / 1000.0,
+        squareRotation: animationState.squareRotation + (75 * elapsed) / 1000.0
+      };
   }
 
   function init() {
@@ -255,7 +262,12 @@
     var useDepthTest = false;
     if (useDepthTest) gl.enable(gl.DEPTH_TEST);
 
-    var lastTime = new Date().getTime();
+    var prevTime = new Date().getTime();
+
+    var animationState = {
+      triangleRotation: 0.0,
+      squareRotation: 0.0
+    };
 
     //
     // Should be able to do something here with (lazy) streams of rotation/tweening values (is that FRP?).
@@ -263,15 +275,12 @@
     //
     function animate() {
       var now = new Date().getTime();
-      var elapsed = now - lastTime;
-
-      triangleRotation += (90 * elapsed) / 1000.0;
-      squareRotation += (75 * elapsed) / 1000.0;
-      lastTime = now;
+      animationState = animatePure(prevTime, now, animationState);
+      prevTime = now;
     }
 
     function tick(animationTime) {
-      drawScene(animationTime, gl);
+      drawScene(animationTime, animationState, gl);
       animate();
       requestAnimationFrame(tick);
     }
