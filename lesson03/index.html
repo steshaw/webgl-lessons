@@ -124,28 +124,6 @@
     shaderProgram.uModelView = gl.getUniformLocation(shaderProgram, "uModelView");
   }
 
-  var projection = mat4.create();
-
-  //
-  // withModelView is easier than immediate-mode OpenGL, however, it no longer looks as if modelView needs
-  // to be a global variable.
-  //
-  var modelView = mat4.create();
-
-  function withModelView(action) {
-    var copy = mat4.create();
-    mat4.set(modelView, copy);
-
-    action();
-
-    modelView = copy;
-  }
-
-  function setMatrixUniforms(gl) {
-    gl.uniformMatrix4fv(shaderProgram.uProjection, false, projection);
-    gl.uniformMatrix4fv(shaderProgram.uModelView, false, modelView);
-  }
-
   var triangle = {};
   var square = {};
 
@@ -209,6 +187,7 @@
     gl.viewport(0, 0, gl.viewportWidth, gl.viewportHeight);
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
+    var projection = mat4.create();
     var usePerspective = true;
 
     if (usePerspective) {
@@ -218,6 +197,22 @@
 //    mat4.ortho(-4.0, 4.0, -4.0, 4.0, 0, 1000, projection);
 //    mat4.identity(projection);
       mat4.ortho(-10.0, +10.0, -10.0, +10.0, 0.1, 100.0, projection);
+    }
+    gl.uniformMatrix4fv(shaderProgram.uProjection, false, projection);
+
+    var modelView = mat4.create();
+
+    function withModelView(action) {
+      var copy = mat4.create();
+      mat4.set(modelView, copy);
+
+      action();
+
+      modelView = copy;
+    }
+
+    function setModelViewUniform() {
+      gl.uniformMatrix4fv(shaderProgram.uModelView, false, modelView);
     }
 
     mat4.identity(modelView);
@@ -231,7 +226,7 @@
         gl.vertexAttribPointer(shaderProgram.aVertexPosition, triangle.vertices.itemSize, gl.FLOAT, false, 0, 0);
         gl.bindBuffer(gl.ARRAY_BUFFER, triangle.colours);
         gl.vertexAttribPointer(shaderProgram.aVertexColour, triangle.colours.itemSize, gl.FLOAT, false, 0, 0);
-        setMatrixUniforms(gl);
+        setModelViewUniform();
         gl.drawArrays(gl.TRIANGLES, 0, triangle.vertices.numItems);
       });
     });
@@ -244,7 +239,7 @@
         gl.vertexAttribPointer(shaderProgram.aVertexPosition, square.vertices.itemSize, gl.FLOAT, false, 0, 0);
         gl.bindBuffer(gl.ARRAY_BUFFER, square.colours);
         gl.vertexAttribPointer(shaderProgram.aVertexColour, square.colours.itemSize, gl.FLOAT, false, 0, 0);
-        setMatrixUniforms(gl);
+        setModelViewUniform();
         gl.drawArrays(gl.TRIANGLE_STRIP, 0, square.vertices.numItems);
       });
     });
