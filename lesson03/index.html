@@ -97,13 +97,11 @@
     return shader;
   }
 
-  var shaderProgram;
-
   function initShaders(gl) {
     var fragmentShader = getShader(gl, "shader-fs");
     var vertexShader = getShader(gl, "shader-vs");
 
-    shaderProgram = gl.createProgram();
+    var shaderProgram = gl.createProgram();
     gl.attachShader(shaderProgram, vertexShader);
     gl.attachShader(shaderProgram, fragmentShader);
     gl.linkProgram(shaderProgram);
@@ -122,6 +120,8 @@
 
     shaderProgram.uProjection = gl.getUniformLocation(shaderProgram, "uProjection");
     shaderProgram.uModelView = gl.getUniformLocation(shaderProgram, "uModelView");
+
+    return shaderProgram;
   }
 
   var triangle = {};
@@ -175,7 +175,7 @@
 
   var frame = 0;
 
-  function drawScene(animationTime, animationState, gl) {
+  function drawScene(gl, shaderProgram, animationTime, animationState) {
     ++frame;
     if (frame < 10) {
       console.log("frame=" + frame + " animationTime=" + animationTime + 
@@ -255,7 +255,7 @@
   function init() {
     var canvas = document.getElementById("lesson01-canvas");
     var gl = initGL(canvas);
-    initShaders(gl);
+    var shaderProgram = initShaders(gl);
     initBuffers(gl);
 
     gl.clearColor(0.0, 0.0, 0.0, 1.0);
@@ -280,7 +280,7 @@
     }
 
     function tick(animationTime) {
-      drawScene(animationTime, animationState, gl);
+      drawScene(gl, shaderProgram, animationTime, animationState);
       animate();
       requestAnimationFrame(tick);
     }
