@@ -40,16 +40,13 @@
     return degrees * Math.PI / 180;
   }
 
-  var gl;
-
   function initGL(canvas) {
     try {
-      gl = canvas.getContext("experimental-webgl");
+      var gl = canvas.getContext("experimental-webgl");
       gl.viewportWidth = canvas.width;
       gl.viewportHeight = canvas.height;
+      return gl;
     } catch (e) {
-    }
-    if (!gl) {
       alert("Could not initialise WebGL, sorry :-(");
     }
   }
@@ -102,7 +99,7 @@
 
   var shaderProgram;
 
-  function initShaders() {
+  function initShaders(gl) {
     var fragmentShader = getShader(gl, "shader-fs");
     var vertexShader = getShader(gl, "shader-vs");
 
@@ -144,7 +141,7 @@
     modelView = copy;
   }
 
-  function setMatrixUniforms() {
+  function setMatrixUniforms(gl) {
     gl.uniformMatrix4fv(shaderProgram.uProjection, false, projection);
     gl.uniformMatrix4fv(shaderProgram.uModelView, false, modelView);
   }
@@ -152,7 +149,7 @@
   var triangle = {};
   var square = {};
 
-  function initBuffers() {
+  function initBuffers(gl) {
     triangle.vertices = gl.createBuffer();
     gl.bindBuffer(gl.ARRAY_BUFFER, triangle.vertices);
     var vertices = [
@@ -203,10 +200,10 @@
 
   var frame = 0;
 
-  function drawScene() {
+  function drawScene(animationTime, gl) {
     ++frame;
     if (frame < 10) {
-      console.log("frame=" + frame + " triangleRotation=" + triangleRotation);
+      console.log("frame=" + frame + " animationTime=" + animationTime + " triangleRotation=" + triangleRotation);
     }
 
     gl.viewport(0, 0, gl.viewportWidth, gl.viewportHeight);
@@ -234,7 +231,7 @@
         gl.vertexAttribPointer(shaderProgram.aVertexPosition, triangle.vertices.itemSize, gl.FLOAT, false, 0, 0);
         gl.bindBuffer(gl.ARRAY_BUFFER, triangle.colours);
         gl.vertexAttribPointer(shaderProgram.aVertexColour, triangle.colours.itemSize, gl.FLOAT, false, 0, 0);
-        setMatrixUniforms();
+        setMatrixUniforms(gl);
         gl.drawArrays(gl.TRIANGLES, 0, triangle.vertices.numItems);
       });
     });
@@ -247,52 +244,50 @@
         gl.vertexAttribPointer(shaderProgram.aVertexPosition, square.vertices.itemSize, gl.FLOAT, false, 0, 0);
         gl.bindBuffer(gl.ARRAY_BUFFER, square.colours);
         gl.vertexAttribPointer(shaderProgram.aVertexColour, square.colours.itemSize, gl.FLOAT, false, 0, 0);
-        setMatrixUniforms();
+        setMatrixUniforms(gl);
         gl.drawArrays(gl.TRIANGLE_STRIP, 0, square.vertices.numItems);
       });
     });
   }
 
-  //
-  // Appears to have a visually undetectable problem of showing the same frame (i.e. degree of rotation/animation)
-  // for the first _and_ second frames.
-  // Should be able to do something here with (lazy) streams of rotation/tweening values (is that FRP?).
-  //
-  var lastTime = 0;
-  function animate() {
-    var timeNow = new Date().getTime();
-    if (lastTime != 0) {
-      var elapsed = timeNow - lastTime;
-
-      triangleRotation += (90 * elapsed) / 1000.0;
-      squareRotation += (75 * elapsed) / 1000.0;
-    }
-    lastTime = timeNow;
-  }
-
-  function tick() {
-    requestAnimFrame(tick);
-    drawScene();
-    animate();
-  }
-
-  function webGLStart() {
+  function init() {
     var canvas = document.getElementById("lesson01-canvas");
-    initGL(canvas);
-    initShaders();
-    initBuffers();
+    var gl = initGL(canvas);
+    initShaders(gl);
+    initBuffers(gl);
 
     gl.clearColor(0.0, 0.0, 0.0, 1.0);
     var useDepthTest = false;
     if (useDepthTest) gl.enable(gl.DEPTH_TEST);
 
-    tick();
+    var lastTime = new Date().getTime();
+
+    //
+    // Should be able to do something here with (lazy) streams of rotation/tweening values (is that FRP?).
+    // animate as a pure function?
+    //
+    function animate() {
+      var now = new Date().getTime();
+      var elapsed = now - lastTime;
+
+      triangleRotation += (90 * elapsed) / 1000.0;
+      squareRotation += (75 * elapsed) / 1000.0;
+      lastTime = now;
+    }
+
+    function tick(animationTime) {
+      drawScene(animationTime, gl);
+      animate();
+      requestAnimFrame(tick);
+    }
+
+    requestAnimFrame(tick);
   }
 </script>
 
 </head>
 
-<body onload="webGLStart();">
+<body onload="init();">
   <canvas id="lesson01-canvas" style="border: none;" width="500" height="500"></canvas>
 </body>
 
