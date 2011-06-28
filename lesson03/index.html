@@ -124,10 +124,15 @@
     return shaderProgram;
   }
 
-  var triangle = {};
-  var square = {};
 
   function initBuffers(gl) {
+    var triangle = {};
+    var square = {};
+    var buffers = {
+      triangle: triangle, 
+      square: square
+    };
+
     triangle.vertices = gl.createBuffer();
     gl.bindBuffer(gl.ARRAY_BUFFER, triangle.vertices);
     var vertices = [
@@ -171,11 +176,13 @@
     gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(colours), gl.STATIC_DRAW);
     square.colours.itemSize = 4;
     square.colours.numItems = 4;
+
+    return buffers;
   }
 
   var frame = 0;
 
-  function drawScene(gl, shaderProgram, animationTime, animationState) {
+  function drawScene(gl, shaderProgram, buffers, animationTime, animationState) {
     ++frame;
     if (frame < 10) {
       console.log("frame=" + frame + " animationTime=" + animationTime + 
@@ -219,6 +226,7 @@
     withModelView(function() {
       mat4.translate(modelView, [-1.5, 0.0, 0.0]);
       withModelView(function() {
+        var triangle = buffers.triangle;
         mat4.rotate(modelView, degToRad(animationState.triangleRotation), [0, 1, 0]);
         gl.bindBuffer(gl.ARRAY_BUFFER, triangle.vertices);
         gl.vertexAttribPointer(shaderProgram.aVertexPosition, triangle.vertices.itemSize, gl.FLOAT, false, 0, 0);
@@ -232,6 +240,7 @@
     withModelView(function() {
       mat4.translate(modelView, [+1.5, 0.0, 0.0]);
       withModelView(function() {
+        var square = buffers.square;
         mat4.rotate(modelView, degToRad(animationState.squareRotation), [1, 0, 0]);
         gl.bindBuffer(gl.ARRAY_BUFFER, square.vertices);
         gl.vertexAttribPointer(shaderProgram.aVertexPosition, square.vertices.itemSize, gl.FLOAT, false, 0, 0);
@@ -256,7 +265,7 @@
     var canvas = document.getElementById("lesson01-canvas");
     var gl = initGL(canvas);
     var shaderProgram = initShaders(gl);
-    initBuffers(gl);
+    var buffers = initBuffers(gl);
 
     gl.clearColor(0.0, 0.0, 0.0, 1.0);
     var useDepthTest = false;
@@ -280,7 +289,7 @@
     }
 
     function tick(animationTime) {
-      drawScene(gl, shaderProgram, animationTime, animationState);
+      drawScene(gl, shaderProgram, buffers, animationTime, animationState);
       animate();
       requestAnimationFrame(tick);
     }
